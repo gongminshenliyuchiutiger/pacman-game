@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>神奇小精靈遊戲冒險系統</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            font-family: 'Arial', sans-serif;
+        }
+        
+        #game-container {
+            position: relative;
+            width: 80vw;
+            max-width: 800px;
+            height: 60vw;
+            max-height: 600px;
+            background: #000;
+            border: 4px solid #ffd700;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+            overflow: hidden;
+            touch-action: none; /* 防止觸控時頁面滾動 */
+        }
+
+        #pacman {
+            position: absolute;
+            width: 5vw;
+            height: 5vw;
+            max-width: 40px;
+            max-height: 40px;
+            background-image: url('image/pacman.svg');
+            background-size: cover;
+            transition: transform 0.1s;
+            z-index: 2;
+        }
+
+        .dot {
+            position: absolute;
+            width: 1.5vw;
+            height: 1.5vw;
+            max-width: 12px;
+            max-height: 12px;
+            background: radial-gradient(circle, #fff700, #ffaa00);
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(255, 215, 0, 0.8);
+            z-index: 1;
+        }
+
+        .eat-effect {
+            position: absolute;
+            width: 2.5vw;
+            height: 2.5vw;
+            max-width: 20px;
+            max-height: 20px;
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.8), transparent);
+            border-radius: 50%;
+            animation: eatAnimation 0.5s ease-out forwards;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        @keyframes eatAnimation {
+            0% { transform: scale(0.1); opacity: 1; }
+            100% { transform: scale(2); opacity: 0; }
+        }
+
+        .ghost {
+            position: absolute;
+            width: 5vw;
+            height: 5vw;
+            max-width: 40px;
+            max-height: 40px;
+            background: url('image/ghost.svg');
+            background-size: cover;
+            z-index: 2;
+        }
+
+        #score {
+            position: absolute;
+            top: 2vw;
+            left: 2vw;
+            color: #ffd700;
+            font-size: clamp(16px, 3.5vw, 28px);
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 0.5vw 1vw;
+            border-radius: 5px;
+        }
+
+        #timer {
+            position: absolute;
+            top: 2vw;
+            right: 2vw;
+            color: #ff4444;
+            font-size: clamp(16px, 3.5vw, 28px);
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 0.5vw 1vw;
+            border-radius: 5px;
+        }
+
+        #game-message {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffd700;
+            font-size: clamp(24px, 6vw, 48px);
+            font-weight: bold;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2vw 4vw;
+            border-radius: 10px;
+            display: none;
+            z-index: 10;
+            text-align: center;
+        }
+
+        #restart-btn {
+            display: none;
+            position: absolute;
+            top: 60%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 1vw 2vw;
+            background-color: #ffd700;
+            border: none;
+            border-radius: 5px;
+            font-size: clamp(14px, 2.5vw, 18px);
+            font-weight: bold;
+            color: #000;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            z-index: 10;
+        }
+
+        #restart-btn:hover {
+            background-color: #ffaa00;
+        }
+
+        #header {
+            text-align: center;
+            margin-bottom: 1vw;
+        }
+
+        #title {
+            color: #ffd700;
+            font-size: clamp(20px, 4vw, 32px);
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin: 0;
+        }
+
+        #controls {
+            display: flex;
+            justify-content: center;
+            gap: 1vw;
+            align-items: center;
+            margin-top: 0.5vw;
+        }
+
+        #play-pause {
+            width: 4vw;
+            height: 4vw;
+            max-width: 30px;
+            max-height: 30px;
+            background-color: transparent;
+            border: 2px solid #ffd700;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: clamp(12px, 2vw, 16px);
+            color: #ffd700;
+            transition: background-color 0.2s;
+        }
+
+        #play-pause:hover {
+            background-color: rgba(255, 215, 0, 0.2);
+        }
+
+        #volume {
+            width: 10vw;
+            max-width: 80px;
+            accent-color: #ffd700;
+        }
+
+        #instructions {
+            position: absolute;
+            top: 6vw;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffffff;
+            font-size: clamp(12px, 2.5vw, 18px);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 0.5vw 1.5vw;
+            border-radius: 5px;
+            z-index: 5;
+            white-space: nowrap; /* 文字不換行 */
+        }
+
+        #copyright {
+            color: #ffd700;
+            margin-top: 2vw;
+            font-size: clamp(12px, 2vw, 16px);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 針對小型裝置 */
+        @media (max-width: 600px) {
+            #game-container {
+                width: 90vw;
+                height: 67.5vw;
+            }
+            #pacman, .ghost {
+                width: 6vw;
+                height: 6vw;
+            }
+            .dot {
+                width: 2vw;
+                height: 2vw;
+            }
+            #restart-btn {
+                padding: 2vw 4vw;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <div id="title">神奇小精靈遊戲冒險系統</div>
+        <div id="controls">
+            <button id="play-pause">▶</button>
+            <input type="range" id="volume" min="0" max="1" step="0.1" value="1">
+        </div>
+    </div>
+    <div id="game-container">
+        <div id="pacman"></div>
+        <div id="score">分數: 0</div>
+        <div id="timer">時間: 20</div>
+        <div id="instructions">過關條件：在20秒內吃完10個食物點</div>
+        <div id="game-message"></div>
+        <button id="restart-btn">再次挑戰</button>
+        <div id="ghost1" class="ghost"></div>
+        <div id="ghost2" class="ghost"></div>
+    </div>
+    <div id="copyright">Copyright © Liyuchiutiger Gongminshen</div>
+
+    <audio id="background-music" loop>
+        <source src="music/background.mp3" type="audio/mpeg">
+    </audio>
+
+    <script>
+        const gameContainer = document.getElementById('game-container');
+        const pacman = document.getElementById('pacman');
+        const scoreDisplay = document.getElementById('score');
+        const timerDisplay = document.getElementById('timer');
+        const gameMessage = document.getElementById('game-message');
+        const restartBtn = document.getElementById('restart-btn');
+        const audio = document.getElementById('background-music');
+        const playPauseBtn = document.getElementById('play-pause');
+        const volumeControl = document.getElementById('volume');
+        const ghosts = [document.getElementById('ghost1'), document.getElementById('ghost2')];
+        let score = 0;
+        let pacmanX = 0;
+        let pacmanY = 0;
+        const ghostStates = [
+            { x: 0, y: 0 },
+            { x: 0, y: 0 }
+        ];
+        const speed = 5;
+        let timeLeft = 20;
+        let gameActive = true;
+        const totalDots = 20;
+        const dotsToWin = 10;
+        let touchDirection = null; // 觸控方向
+
+        function getContainerDimensions() {
+            return {
+                width: gameContainer.offsetWidth,
+                height: gameContainer.offsetHeight
+            };
+        }
+
+        function setInitialPositions() {
+            const { width, height } = getContainerDimensions();
+            pacmanX = 0;
+            pacmanY = 0;
+            pacman.style.left = pacmanX + 'px';
+            pacman.style.top = pacmanY + 'px';
+            ghostStates[0] = { x: width / 2, y: height / 2 };
+            ghostStates[1] = { x: width / 2 + 50, y: height / 2 + 50 };
+            ghosts.forEach((ghost, index) => {
+                ghost.style.left = ghostStates[index].x + 'px';
+                ghost.style.top = ghostStates[index].y + 'px';
+            });
+        }
+
+        function initMusic() {
+            audio.volume = 1;
+            playPauseBtn.addEventListener('click', () => {
+                if (audio.paused) {
+                    audio.play();
+                    playPauseBtn.textContent = '⏸';
+                } else {
+                    audio.pause();
+                    playPauseBtn.textContent = '▶';
+                }
+            });
+            volumeControl.addEventListener('input', (e) => {
+                audio.volume = e.target.value;
+            });
+        }
+
+        function createDots() {
+            const { width, height } = getContainerDimensions();
+            const existingDots = document.getElementsByClassName('dot');
+            while (existingDots.length > 0) {
+                existingDots[0].remove();
+            }
+            for (let i = 0; i < totalDots; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                dot.style.left = Math.random() * (width - 12) + 'px';
+                dot.style.top = Math.random() * (height - 12) + 'px';
+                gameContainer.appendChild(dot);
+            }
+        }
+
+        function createEatEffect(x, y) {
+            const effect = document.createElement('div');
+            effect.className = 'eat-effect';
+            effect.style.left = x + 'px';
+            effect.style.top = y + 'px';
+            gameContainer.appendChild(effect);
+            setTimeout(() => effect.remove(), 500);
+        }
+
+        function checkCollision() {
+            if (!gameActive) return;
+
+            const dots = document.getElementsByClassName('dot');
+            for (let i = dots.length - 1; i >= 0; i--) {
+                const dot = dots[i];
+                const dotRect = dot.getBoundingClientRect();
+                const pacmanRect = pacman.getBoundingClientRect();
+
+                if (pacmanRect.left < dotRect.right &&
+                    pacmanRect.right > dotRect.left &&
+                    pacmanRect.top < dotRect.bottom &&
+                    pacmanRect.bottom > dotRect.top) {
+                    const dotX = parseFloat(dot.style.left) + 6;
+                    const dotY = parseFloat(dot.style.top) + 6;
+                    createEatEffect(dotX - 10, dotY - 10);
+                    dot.remove();
+                    score += 10;
+                    scoreDisplay.textContent = '分數: ' + score;
+
+                    if (score >= dotsToWin * 10) {
+                        endGame(true);
+                    }
+                }
+            }
+
+            const pacmanRect = pacman.getBoundingClientRect();
+            ghosts.forEach(ghost => {
+                const ghostRect = ghost.getBoundingClientRect();
+                if (pacmanRect.left < ghostRect.right &&
+                    pacmanRect.right > ghostRect.left &&
+                    pacmanRect.top < ghostRect.bottom &&
+                    pacmanRect.bottom > ghostRect.top) {
+                    endGame(false);
+                }
+            });
+        }
+
+        // 鍵盤控制
+        function handleKeyMovement(e) {
+            if (!gameActive) return;
+            const { width, height } = getContainerDimensions();
+            const pacmanSize = pacman.offsetWidth;
+
+            switch(e.key) {
+                case 'ArrowUp':
+                    if (pacmanY > 0) pacmanY -= speed;
+                    pacman.style.transform = 'rotate(-90deg)';
+                    break;
+                case 'ArrowDown':
+                    if (pacmanY < height - pacmanSize) pacmanY += speed;
+                    pacman.style.transform = 'rotate(90deg)';
+                    break;
+                case 'ArrowLeft':
+                    if (pacmanX > 0) pacmanX -= speed;
+                    pacman.style.transform = 'rotate(180deg)';
+                    break;
+                case 'ArrowRight':
+                    if (pacmanX < width - pacmanSize) pacmanX += speed;
+                    pacman.style.transform = 'rotate(0deg)';
+                    break;
+            }
+
+            pacman.style.left = pacmanX + 'px';
+            pacman.style.top = pacmanY + 'px';
+            checkCollision();
+        }
+
+        document.addEventListener('keydown', handleKeyMovement);
+
+        // 觸控控制
+        let touchStartX = 0;
+        let touchStartY = 0;
+
+        gameContainer.addEventListener('touchstart', (e) => {
+            if (!gameActive) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+        });
+
+        gameContainer.addEventListener('touchmove', (e) => {
+            if (!gameActive) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - touchStartX;
+            const deltaY = touch.clientY - touchStartY;
+            const { width, height } = getContainerDimensions();
+            const pacmanSize = pacman.offsetWidth;
+
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+                // 水平移動
+                if (deltaX > 10) {
+                    touchDirection = 'right';
+                    pacman.style.transform = 'rotate(0deg)';
+                } else if (deltaX < -10) {
+                    touchDirection = 'left';
+                    pacman.style.transform = 'rotate(180deg)';
+                }
+            } else {
+                // 垂直移動
+                if (deltaY > 10) {
+                    touchDirection = 'down';
+                    pacman.style.transform = 'rotate(90deg)';
+                } else if (deltaY < -10) {
+                    touchDirection = 'up';
+                    pacman.style.transform = 'rotate(-90deg)';
+                }
+            }
+
+            touchStartX = touch.clientX;
+            touchStartY = touch.clientY;
+        });
+
+        gameContainer.addEventListener('touchend', () => {
+            touchDirection = null;
+        });
+
+        // 持續移動
+        function updatePacmanPosition() {
+            if (!gameActive || !touchDirection) return;
+            const { width, height } = getContainerDimensions();
+            const pacmanSize = pacman.offsetWidth;
+
+            switch(touchDirection) {
+                case 'up':
+                    if (pacmanY > 0) pacmanY -= speed;
+                    break;
+                case 'down':
+                    if (pacmanY < height - pacmanSize) pacmanY += speed;
+                    break;
+                case 'left':
+                    if (pacmanX > 0) pacmanX -= speed;
+                    break;
+                case 'right':
+                    if (pacmanX < width - pacmanSize) pacmanX += speed;
+                    break;
+            }
+
+            pacman.style.left = pacmanX + 'px';
+            pacman.style.top = pacmanY + 'px';
+            checkCollision();
+            requestAnimationFrame(updatePacmanPosition);
+        }
+
+        requestAnimationFrame(updatePacmanPosition);
+
+        // 惡魔隨機移動
+        function moveGhost(index) {
+            if (!gameActive) return;
+
+            const ghost = ghosts[index];
+            const ghostState = ghostStates[index];
+            const ghostSpeed = 3;
+            const { width, height } = getContainerDimensions();
+            const ghostSize = ghost.offsetWidth;
+
+            if (!ghost.directionCooldown || ghost.directionCooldown <= 0) {
+                ghost.direction = Math.floor(Math.random() * 4);
+                ghost.directionCooldown = 30;
+            } else {
+                ghost.directionCooldown--;
+            }
+
+            switch(ghost.direction) {
+                case 0:
+                    if (ghostState.y > 0) ghostState.y -= ghostSpeed;
+                    break;
+                case 1:
+                    if (ghostState.y < height - ghostSize) ghostState.y += ghostSpeed;
+                    break;
+                case 2:
+                    if (ghostState.x > 0) ghostState.x -= ghostSpeed;
+                    break;
+                case 3:
+                    if (ghostState.x < width - ghostSize) ghostState.x += ghostSpeed;
+                    break;
+            }
+
+            ghost.style.left = ghostState.x + 'px';
+            ghost.style.top = ghostState.y + 'px';
+
+            checkCollision();
+            requestAnimationFrame(() => moveGhost(index));
+        }
+
+        function startGhosts() {
+            ghosts.forEach((ghost, index) => {
+                ghost.direction = Math.floor(Math.random() * 4);
+                ghost.directionCooldown = 30;
+                moveGhost(index);
+            });
+        }
+
+        function startTimer() {
+            const timer = setInterval(() => {
+                if (!gameActive) {
+                    clearInterval(timer);
+                    return;
+                }
+
+                timeLeft--;
+                timerDisplay.textContent = '時間: ' + timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    endGame(false);
+                }
+            }, 1000);
+        }
+
+        function endGame(isWin) {
+            gameActive = false;
+            gameMessage.style.display = 'block';
+            restartBtn.style.display = 'block';
+            if (isWin) {
+                gameMessage.textContent = '勝利！';
+                gameMessage.style.color = '#00ff00';
+            } else {
+                gameMessage.textContent = '失敗...';
+                gameMessage.style.color = '#ff4444';
+            }
+        }
+
+        function restartGame() {
+            gameActive = true;
+            score = 0;
+            timeLeft = 20;
+            setInitialPositions();
+            pacman.style.transform = 'rotate(0deg)';
+            scoreDisplay.textContent = '分數: 0';
+            timerDisplay.textContent = '時間: 20';
+            gameMessage.style.display = 'none';
+            restartBtn.style.display = 'none';
+            createDots();
+            startTimer();
+            startGhosts();
+        }
+
+        restartBtn.addEventListener('click', restartGame);
+
+        function initGame() {
+            setInitialPositions();
+            createDots();
+            initMusic();
+            startTimer();
+            startGhosts();
+        }
+
+        initGame();
+
+        window.addEventListener('resize', () => {
+            if (gameActive) {
+                const { width, height } = getContainerDimensions();
+                pacmanX = Math.min(pacmanX, width - pacman.offsetWidth);
+                pacmanY = Math.min(pacmanY, height - pacman.offsetHeight);
+                pacman.style.left = pacmanX + 'px';
+                pacman.style.top = pacmanY + 'px';
+                ghostStates.forEach((state, index) => {
+                    state.x = Math.min(state.x, width - ghosts[index].offsetWidth);
+                    state.y = Math.min(state.y, height - ghosts[index].offsetHeight);
+                    ghosts[index].style.left = state.x + 'px';
+                    ghosts[index].style.top = state.y + 'px';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
