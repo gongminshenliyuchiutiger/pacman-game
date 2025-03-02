@@ -28,7 +28,7 @@
             border-radius: 15px;
             box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
             overflow: hidden;
-            touch-action: none; /* 防止觸控時頁面滾動 */
+            touch-action: none;
         }
 
         #pacman {
@@ -182,6 +182,11 @@
             font-size: clamp(12px, 2vw, 16px);
             color: #ffd700;
             transition: background-color 0.2s;
+            display: flex; /* 使用 Flexbox 居中 */
+            justify-content: center;
+            align-items: center;
+            line-height: 1; /* 確保圖示垂直居中 */
+            padding: 0; /* 移除內邊距影響 */
         }
 
         #play-pause:hover {
@@ -206,7 +211,7 @@
             padding: 0.5vw 1.5vw;
             border-radius: 5px;
             z-index: 5;
-            white-space: nowrap; /* 文字不換行 */
+            white-space: nowrap;
         }
 
         #copyright {
@@ -216,7 +221,6 @@
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
         }
 
-        /* 針對小型裝置 */
         @media (max-width: 600px) {
             #game-container {
                 width: 90vw;
@@ -283,7 +287,8 @@
         let gameActive = true;
         const totalDots = 20;
         const dotsToWin = 10;
-        let touchDirection = null; // 觸控方向
+        let touchActive = false;
+        let touchDirection = null;
 
         function getContainerDimensions() {
             return {
@@ -384,7 +389,6 @@
             });
         }
 
-        // 鍵盤控制
         function handleKeyMovement(e) {
             if (!gameActive) return;
             const { width, height } = getContainerDimensions();
@@ -416,7 +420,6 @@
 
         document.addEventListener('keydown', handleKeyMovement);
 
-        // 觸控控制
         let touchStartX = 0;
         let touchStartY = 0;
 
@@ -426,10 +429,11 @@
             const touch = e.touches[0];
             touchStartX = touch.clientX;
             touchStartY = touch.clientY;
+            touchActive = true;
         });
 
         gameContainer.addEventListener('touchmove', (e) => {
-            if (!gameActive) return;
+            if (!gameActive || !touchActive) return;
             e.preventDefault();
             const touch = e.touches[0];
             const deltaX = touch.clientX - touchStartX;
@@ -438,63 +442,36 @@
             const pacmanSize = pacman.offsetWidth;
 
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
-                // 水平移動
-                if (deltaX > 10) {
-                    touchDirection = 'right';
+                if (deltaX > 0 && pacmanX < width - pacmanSize) {
+                    pacmanX += speed;
                     pacman.style.transform = 'rotate(0deg)';
-                } else if (deltaX < -10) {
-                    touchDirection = 'left';
+                } else if (deltaX < 0 && pacmanX > 0) {
+                    pacmanX -= speed;
                     pacman.style.transform = 'rotate(180deg)';
                 }
             } else {
-                // 垂直移動
-                if (deltaY > 10) {
-                    touchDirection = 'down';
+                if (deltaY > 0 && pacmanY < height - pacmanSize) {
+                    pacmanY += speed;
                     pacman.style.transform = 'rotate(90deg)';
-                } else if (deltaY < -10) {
-                    touchDirection = 'up';
+                } else if (deltaY < 0 && pacmanY > 0) {
+                    pacmanY -= speed;
                     pacman.style.transform = 'rotate(-90deg)';
                 }
             }
+
+            pacman.style.left = pacmanX + 'px';
+            pacman.style.top = pacmanY + 'px';
+            checkCollision();
 
             touchStartX = touch.clientX;
             touchStartY = touch.clientY;
         });
 
         gameContainer.addEventListener('touchend', () => {
+            touchActive = false;
             touchDirection = null;
         });
 
-        // 持續移動
-        function updatePacmanPosition() {
-            if (!gameActive || !touchDirection) return;
-            const { width, height } = getContainerDimensions();
-            const pacmanSize = pacman.offsetWidth;
-
-            switch(touchDirection) {
-                case 'up':
-                    if (pacmanY > 0) pacmanY -= speed;
-                    break;
-                case 'down':
-                    if (pacmanY < height - pacmanSize) pacmanY += speed;
-                    break;
-                case 'left':
-                    if (pacmanX > 0) pacmanX -= speed;
-                    break;
-                case 'right':
-                    if (pacmanX < width - pacmanSize) pacmanX += speed;
-                    break;
-            }
-
-            pacman.style.left = pacmanX + 'px';
-            pacman.style.top = pacmanY + 'px';
-            checkCollision();
-            requestAnimationFrame(updatePacmanPosition);
-        }
-
-        requestAnimationFrame(updatePacmanPosition);
-
-        // 惡魔隨機移動
         function moveGhost(index) {
             if (!gameActive) return;
 
