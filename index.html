@@ -98,12 +98,10 @@
             display: none;
             z-index: 10;
             text-align: center;
-            /* 彩虹漸層文字 */
             background: linear-gradient(to right, #ff0000, #ff9900, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            /* 外泛霓虹光亮效果 */
             box-shadow: 
                 0 0 10px rgba(255, 0, 0, 0.8),
                 0 0 20px rgba(255, 165, 0, 0.8),
@@ -112,15 +110,15 @@
                 0 0 50px rgba(0, 255, 255, 0.8),
                 0 0 60px rgba(0, 0, 255, 0.8),
                 0 0 70px rgba(255, 0, 255, 0.8);
-            line-height: 1.5; /* 確保分行間距適中 */
+            line-height: 1.2;
         }
 
         #game-message.failure {
-            color: #ff4444; /* 失敗時恢復紅色 */
-            background: none; /* 移除漸層 */
+            color: #ff4444;
+            background: none;
             -webkit-background-clip: initial;
             background-clip: initial;
-            box-shadow: none; /* 移除霓虹光暈 */
+            box-shadow: none;
         }
 
         #start-btn, #restart-btn, #next-level-btn {
@@ -141,8 +139,8 @@
         }
 
         #start-btn {
-            display: block; /* 初始時顯示 */
-            background-color: #00ffff; /* 青色 */
+            display: block;
+            background-color: #00ffff;
         }
 
         #start-btn:hover {
@@ -229,10 +227,6 @@
         .stat-item.timer { color: #ff4444; }
 
         #instructions {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
             color: #ffffff;
             font-size: clamp(12px, 2vw, 16px);
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
@@ -240,17 +234,18 @@
             padding: 0.3vw 1vw;
             border-radius: 10px;
             white-space: nowrap;
-            z-index: 5;
-            display: none; /* 初始隱藏 */
+            display: none;
+            margin-top: 0.5vw;
+            text-align: center;
         }
 
         #instructions span {
             font-weight: bold;
         }
-        .ghost-count { color: #ff77ff; } /* 粉紫 */
-        .ghost-speed { color: #ff9999; } /* 粉橘 */
-        .time-limit { color: #99ccff; } /* 粉藍 */
-        .dot-goal { color: #ff99cc; } /* 粉紅 */
+        .ghost-count { color: #ff77ff; }
+        .ghost-speed { color: #ff9999; }
+        .time-limit { color: #99ccff; }
+        .dot-goal { color: #ff99cc; }
 
         #copyright {
             color: #ffd700;
@@ -259,13 +254,45 @@
             text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
         }
 
+        /* 虛擬搖桿樣式 */
+        #joystick-container {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin-top: 1vw;
+            display: none; /* 初始隱藏 */
+        }
+
+        #joystick-base {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 215, 0, 0.3);
+            border-radius: 50%;
+            border: 2px solid #ffd700;
+        }
+
+        #joystick {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: #ffd700;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            touch-action: none;
+        }
+
         @media (max-width: 600px) {
             #game-container { width: 90vw; height: 67.5vw; }
             #pacman, .ghost { width: 6vw; height: 6vw; }
             .dot { width: 2vw; height: 2vw; }
             #start-btn, #restart-btn, #next-level-btn { padding: 2vw 4vw; }
             #stats-row { font-size: clamp(12px, 2vw, 16px); }
-            #instructions { font-size: clamp(10px, 1.8vw, 14px); top: 5px; }
+            #instructions { font-size: clamp(10px, 1.8vw, 14px); }
+            #joystick-container { width: 100px; height: 100px; }
+            #joystick { width: 30px; height: 30px; }
         }
     </style>
 </head>
@@ -282,6 +309,7 @@
                 <span class="stat-item level" id="level-display">⚔️ 目前關卡: 1</span>｜
                 <span class="stat-item timer" id="timer-display">⏱️ 剩餘時間: 20秒</span>
             </div>
+            <div id="instructions">關卡情境：惡魔<span class="ghost-count">2</span>個，速度<span class="ghost-speed">3.5</span>｜過關條件：在<span class="time-limit">20</span>秒內吃完<span class="dot-goal">10</span>個食物點</div>
         </div>
     </div>
     <div id="game-container">
@@ -290,7 +318,10 @@
         <button id="start-btn">開始遊戲</button>
         <button id="restart-btn">再試一次</button>
         <button id="next-level-btn">進入下一關</button>
-        <div id="instructions">關卡情境：惡魔<span class="ghost-count">2</span>個，速度<span class="ghost-speed">3.5</span>｜過關條件：在<span class="time-limit">20</span>秒內吃完<span class="dot-goal">10</span>個食物點</div>
+    </div>
+    <div id="joystick-container">
+        <div id="joystick-base"></div>
+        <div id="joystick"></div>
     </div>
     <div id="copyright">Copyright © Liyuchiutiger Gongminshen</div>
     <audio id="background-music" loop>
@@ -298,14 +329,14 @@
     </audio>
 
     <script>
-        // 常數定義
         const PACMAN_SPEED = 5;
         const BASE_TIME = 20;
-        const TOTAL_DOTS = 20;
+        const TOTAL_DOTS = 30;
         const BASE_DOTS_TO_WIN = 10;
         const GHOST_BASE_SPEED = 3.5;
+        const MAX_LEVEL = 15;
+        const JOYSTICK_RADIUS = 60; // 搖桿底座半徑（桌面版）
 
-        // DOM 元素
         const gameContainer = document.getElementById('game-container');
         const pacman = document.getElementById('pacman');
         const scoreDisplay = document.getElementById('score-display');
@@ -319,6 +350,8 @@
         const audio = document.getElementById('background-music');
         const playPauseBtn = document.getElementById('play-pause');
         const volumeControl = document.getElementById('volume');
+        const joystickContainer = document.getElementById('joystick-container');
+        const joystick = document.getElementById('joystick');
 
         class Game {
             constructor() {
@@ -336,6 +369,9 @@
                 this.mouseDown = false;
                 this.mouseTargetX = 0;
                 this.mouseTargetY = 0;
+                this.joystickActive = false;
+                this.joystickDeltaX = 0;
+                this.joystickDeltaY = 0;
             }
 
             getContainerDimensions() {
@@ -392,7 +428,7 @@
                 const ghostCount = Math.min(2 + Math.floor(this.level / 2), 5);
                 const ghostSpeed = (GHOST_BASE_SPEED + this.level * 0.5).toFixed(1);
                 instructions.innerHTML = `關卡情境：惡魔<span class="ghost-count">${ghostCount}</span>個，速度<span class="ghost-speed">${ghostSpeed}</span>｜過關條件：在<span class="time-limit">${this.timeLeft}</span>秒內吃完<span class="dot-goal">${this.dotsToWin}</span>個食物點`;
-                instructions.style.display = 'block'; // 開始遊戲後顯示
+                instructions.style.display = 'block';
             }
 
             checkCollision() {
@@ -494,7 +530,7 @@
                 const { width, height } = this.getContainerDimensions();
                 const pacmanSize = pacman.offsetWidth;
 
-                // 觸控移動
+                // 觸控移動（遊戲畫面內）
                 if (this.touchDeltaX !== 0 || this.touchDeltaY !== 0) {
                     if (Math.abs(this.touchDeltaX) > Math.abs(this.touchDeltaY)) {
                         if (this.touchDeltaX > 0 && this.pacmanX < width - pacmanSize) {
@@ -511,6 +547,30 @@
                         } else if (this.touchDeltaY < 0 && this.pacmanY > 0) {
                             this.pacmanY -= PACMAN_SPEED;
                             pacman.style.transform = 'rotate(-90deg)';
+                        }
+                    }
+                }
+
+                // 搖桿移動
+                if (this.joystickActive) {
+                    const magnitude = Math.sqrt(this.joystickDeltaX * this.joystickDeltaX + this.joystickDeltaY * this.joystickDeltaY);
+                    if (magnitude > 5) { // 避免過小的移動
+                        if (Math.abs(this.joystickDeltaX) > Math.abs(this.joystickDeltaY)) {
+                            if (this.joystickDeltaX > 0 && this.pacmanX < width - pacmanSize) {
+                                this.pacmanX += PACMAN_SPEED;
+                                pacman.style.transform = 'rotate(0deg)';
+                            } else if (this.joystickDeltaX < 0 && this.pacmanX > 0) {
+                                this.pacmanX -= PACMAN_SPEED;
+                                pacman.style.transform = 'rotate(180deg)';
+                            }
+                        } else {
+                            if (this.joystickDeltaY > 0 && this.pacmanY < height - pacmanSize) {
+                                this.pacmanY += PACMAN_SPEED;
+                                pacman.style.transform = 'rotate(90deg)';
+                            } else if (this.joystickDeltaY < 0 && this.pacmanY > 0) {
+                                this.pacmanY -= PACMAN_SPEED;
+                                pacman.style.transform = 'rotate(-90deg)';
+                            }
                         }
                     }
                 }
@@ -571,19 +631,29 @@
 
             end(isWin) {
                 this.gameActive = false;
+                joystickContainer.style.display = 'none'; // 遊戲結束時隱藏搖桿
                 gameMessage.style.display = 'block';
                 if (isWin) {
-                    gameMessage.innerHTML = `恭喜通過<br>第${this.level}關`; // 使用 <br> 分行
-                    gameMessage.classList.remove('failure'); // 確保使用彩虹漸層
-                    nextLevelBtn.style.display = 'block';
+                    if (this.level === MAX_LEVEL) {
+                        gameMessage.innerHTML = `<div>You R</div><div>神爆小精靈</div>`;
+                        gameMessage.style.textAlign = 'center';
+                        gameMessage.classList.remove('failure');
+                        restartBtn.style.display = 'block';
+                    } else {
+                        gameMessage.innerHTML = `恭喜通過<br>第${this.level}關`;
+                        gameMessage.classList.remove('failure');
+                        nextLevelBtn.style.display = 'block';
+                    }
                 } else {
                     gameMessage.textContent = '再試一次';
-                    gameMessage.classList.add('failure'); // 使用紅色
+                    gameMessage.classList.add('failure');
                     restartBtn.style.display = 'block';
                 }
             }
 
             nextLevel() {
+                if (this.level >= MAX_LEVEL) return;
+
                 this.level++;
                 this.timeLeft = BASE_TIME - (this.level - 1);
                 this.dotsToWin = BASE_DOTS_TO_WIN + (this.level - 1);
@@ -599,6 +669,7 @@
                 this.createDots();
                 this.startTimer();
                 this.startGhosts();
+                joystickContainer.style.display = 'block'; // 顯示搖桿
                 requestAnimationFrame((ts) => this.updatePacmanPosition(ts));
             }
 
@@ -617,6 +688,7 @@
                 this.createDots();
                 this.startTimer();
                 this.startGhosts();
+                joystickContainer.style.display = 'block'; // 顯示搖桿
                 requestAnimationFrame((ts) => this.updatePacmanPosition(ts));
             }
 
@@ -630,8 +702,9 @@
                 scoreDisplay.textContent = `🌟 累積分數：${this.score}`;
                 timerDisplay.textContent = `⏱️ 剩餘時間：${this.timeLeft}秒`;
                 this.updateInstructions();
+                joystickContainer.style.display = 'block'; // 啟動遊戲時顯示搖桿
                 requestAnimationFrame((ts) => this.updatePacmanPosition(ts));
-                startBtn.style.display = 'none'; // 隱藏開始按鈕
+                startBtn.style.display = 'none';
             }
         }
 
@@ -640,7 +713,7 @@
         // 鍵盤控制
         document.addEventListener('keydown', e => game.movePacman(e.key));
 
-        // 觸控控制
+        // 遊戲畫面觸控控制
         let touchStartX = 0, touchStartY = 0;
         gameContainer.addEventListener('touchstart', e => {
             if (!game.gameActive) return;
@@ -669,7 +742,7 @@
             game.touchDeltaY = 0;
         });
 
-        // 滑鼠控制（按住移動）
+        // 滑鼠控制
         gameContainer.addEventListener('mousedown', e => {
             if (!game.gameActive) return;
             const rect = gameContainer.getBoundingClientRect();
@@ -687,6 +760,49 @@
             const rect = gameContainer.getBoundingClientRect();
             game.mouseTargetX = e.clientX - rect.left - pacman.offsetWidth / 2;
             game.mouseTargetY = e.clientY - rect.top - pacman.offsetHeight / 2;
+        });
+
+        // 搖桿控制
+        let joystickStartX = 0, joystickStartY = 0;
+        const joystickRadius = window.innerWidth <= 600 ? 50 : JOYSTICK_RADIUS; // 手機版半徑50，桌面版60
+
+        joystick.addEventListener('touchstart', e => {
+            if (!game.gameActive) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            joystickStartX = touch.clientX;
+            joystickStartY = touch.clientY;
+            game.joystickActive = true;
+        });
+
+        joystick.addEventListener('touchmove', e => {
+            if (!game.gameActive || !game.joystickActive) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            let deltaX = touch.clientX - joystickStartX;
+            let deltaY = touch.clientY - joystickStartY;
+
+            // 限制搖桿移動範圍在底座內
+            const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+            if (distance > joystickRadius) {
+                const angle = Math.atan2(deltaY, deltaX);
+                deltaX = joystickRadius * Math.cos(angle);
+                deltaY = joystickRadius * Math.sin(angle);
+            }
+
+            joystick.style.left = `calc(50% + ${deltaX}px)`;
+            joystick.style.top = `calc(50% + ${deltaY}px)`;
+
+            game.joystickDeltaX = deltaX;
+            game.joystickDeltaY = deltaY;
+        });
+
+        joystick.addEventListener('touchend', () => {
+            game.joystickActive = false;
+            game.joystickDeltaX = 0;
+            game.joystickDeltaY = 0;
+            joystick.style.left = '50%';
+            joystick.style.top = '50%';
         });
 
         // 按鈕事件
@@ -723,8 +839,6 @@
                 });
             }
         });
-
-        // 不自動啟動遊戲，等待用戶點擊「開始遊戲」
     </script>
 </body>
 </html>
